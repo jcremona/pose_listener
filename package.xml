@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>pose_listener</name>
+  <version>0.0.1</version>
+  <description>Pose listener</description>
+  <license>GPLv3</license>
+  <maintainer email="cremona@cifasis-conicet.gov.ar">Javier Cremona</maintainer>
+  <author email="cremona@cifasis-conicet.gov.ar">Javier Cremona</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>nav_msgs</depend>
+
+</package>
