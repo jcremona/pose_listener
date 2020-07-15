@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <ros/network.h>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <time.h>
 #include <fstream>
 #include <boost/bind.hpp>
@@ -46,6 +47,25 @@ void poseCallback(const nav_msgs::Odometry::ConstPtr& msg, std::string& filepath
     Logger(filepath, T_b_w_str);
 }
 
+void poseCallbackPoseStamped(const geometry_msgs::PoseStamped::ConstPtr& msg, std::string& filepath)
+{
+    float m_xPos = msg->pose.position.x;
+    float m_yPos = msg->pose.position.y;
+    float m_zPos = msg->pose.position.z;
+    float m_qw = msg->pose.orientation.w;
+    float m_qx = msg->pose.orientation.x;
+    float m_qy = msg->pose.orientation.y;
+    float m_qz = msg->pose.orientation.z;
+    ros::Time stamp = msg->header.stamp;
+    ROS_INFO("Pose: (%f, %f, %f, %f, %f, %f, %f, %f)", stamp.toSec(), m_xPos, m_yPos, m_zPos, m_qw, m_qx, m_qy, m_qz);
+
+    std::stringstream ss;
+    ss << std::fixed << stamp.toSec() << " " << m_xPos << " " << m_yPos << " " << m_zPos << " " << m_qw << " "<< m_qx << " " << m_qy << " " << m_qz;
+
+    std::string T_b_w_str = ss.str();
+    Logger(filepath, T_b_w_str);
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "pose_listener");
@@ -58,7 +78,7 @@ int main(int argc, char **argv)
   n.getParam("output", filepath);
   ROS_INFO("Topic: %s", topic.c_str());
   ROS_INFO("Output path: %s", filepath.c_str());
-  ros::Subscriber sub = n.subscribe<nav_msgs::Odometry>(topic, 1000, boost::bind(poseCallback, _1, boost::ref(filepath)));
+  ros::Subscriber sub = n.subscribe<geometry_msgs::PoseStamped>(topic, 1000, boost::bind(poseCallbackPoseStamped, _1, boost::ref(filepath)));
 
   ros::spin();
 
