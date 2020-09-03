@@ -76,6 +76,6 @@ include_directories(
   #${SUITESPARSE_INCLUDE_DIRS}
 )
 
-add_executable(pose_listener src/pose_listener.cpp)
+add_executable(pose_listener src/pose_listener.cpp src/message_to_log.cpp)
 target_link_libraries(pose_listener ${catkin_LIBRARIES})
 

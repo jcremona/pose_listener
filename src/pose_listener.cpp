@@ -1,70 +1,30 @@
 #include <ros/ros.h>
-#include <ros/network.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <time.h>
 #include <fstream>
 #include <boost/bind.hpp>
+#include "message_to_log.h"
 
-// Generate string with current date time
-//inline std::string getCurrentDateTime( std::string s ){
-//    time_t now = time(0);
-//    struct tm  tstruct;
-//    char  buf[80];
-//    tstruct = *localtime(&now);
-//    if(s=="now")
-//        strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-//    else if(s=="date")
-//        strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
-//    return std::string(buf);
-//};
-
-// Log string message
-inline void Logger( std::string filePath, std::string logMsg){
-
-    std::ofstream ofs(filePath.c_str(), std::ios_base::out | std::ios_base::app );
-//    ofs << now << '\t' << logMsg << '\n';
-    ofs << logMsg << std::endl;
-    ofs.close();
+void logMessage(MessageToLog msgToLog, std::string filePath) {
+    msgToLog.saveTUMFormat(filePath);
 }
 
-void poseCallback(const nav_msgs::Odometry::ConstPtr& msg, std::string& filepath)
+void poseCallback(const nav_msgs::Odometry::ConstPtr& msg, std::string filePath)
 {
-    float m_xPos = msg->pose.pose.position.x;
-    float m_yPos = msg->pose.pose.position.y;
-    float m_zPos = msg->pose.pose.position.z;
-    float m_qw = msg->pose.pose.orientation.w;
-    float m_qx = msg->pose.pose.orientation.x;
-    float m_qy = msg->pose.pose.orientation.y;
-    float m_qz = msg->pose.pose.orientation.z;
-    ros::Time stamp = msg->header.stamp;
-    ROS_INFO("Pose: (%f, %f, %f, %f, %f, %f, %f, %f)", stamp.toSec(), m_xPos, m_yPos, m_zPos, m_qw, m_qx, m_qy, m_qz);
-
-    std::stringstream ss;
-    ss << std::fixed << stamp.toSec() << " " << m_xPos << " " << m_yPos << " " << m_zPos << " " << m_qw << " "<< m_qx << " " << m_qy << " " << m_qz;
-
-    std::string T_b_w_str = ss.str();
-    Logger(filepath, T_b_w_str);
+    MessageToLog msgToLog(msg);
+    logMessage(msgToLog, filePath);
 }
 
-void poseCallbackPoseStamped(const geometry_msgs::PoseStamped::ConstPtr& msg, std::string& filepath)
+void poseCallbackPoseStamped(const geometry_msgs::PoseStamped::ConstPtr& msg, std::string filePath)
 {
-    float m_xPos = msg->pose.position.x;
-    float m_yPos = msg->pose.position.y;
-    float m_zPos = msg->pose.position.z;
-    float m_qw = msg->pose.orientation.w;
-    float m_qx = msg->pose.orientation.x;
-    float m_qy = msg->pose.orientation.y;
-    float m_qz = msg->pose.orientation.z;
-    ros::Time stamp = msg->header.stamp;
-    ROS_INFO("Pose: (%f, %f, %f, %f, %f, %f, %f, %f)", stamp.toSec(), m_xPos, m_yPos, m_zPos, m_qw, m_qx, m_qy, m_qz);
-
-    std::stringstream ss;
-    ss << std::fixed << stamp.toSec() << " " << m_xPos << " " << m_yPos << " " << m_zPos << " " << m_qw << " "<< m_qx << " " << m_qy << " " << m_qz;
-
-    std::string T_b_w_str = ss.str();
-    Logger(filepath, T_b_w_str);
+    MessageToLog msgToLog(msg);
+    logMessage(msgToLog, filePath);
 }
+
+void poseCallbackPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg, std::string filePath)
+{
+    MessageToLog msgToLog(msg);
+    logMessage(msgToLog, filePath);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -73,13 +33,37 @@ int main(int argc, char **argv)
   ros::NodeHandle n("~");
   ROS_INFO("Start pose_listener...");
   std::string topic;
+  std::string topic_type;
   std::string filepath;
+  filepath = "trajectory.txt";
   n.getParam("topic", topic);
-  n.getParam("output", filepath);
+  n.getParam("type", topic_type);
+  // n.getParam("output", filepath);
   ROS_INFO("Topic: %s", topic.c_str());
-  ROS_INFO("Output path: %s", filepath.c_str());
-  ros::Subscriber sub = n.subscribe<geometry_msgs::PoseStamped>(topic, 1000, boost::bind(poseCallbackPoseStamped, _1, boost::ref(filepath)));
+  ROS_INFO("Output file: %s", filepath.c_str());
+  std::ifstream infile(filepath);
+  if (infile.good()) {
+    std::cerr << "ERROR: Output File Exists" << std::endl;
+    return -1;
+  }
 
+  ros::Subscriber sub; // This variable must be declared here, otherwise the subscriber goes out of scope and unsubscribes.
+  if (topic_type == "PS") {
+      ROS_INFO("Topic type: geometry_msgs::PoseStamped");
+      sub = n.subscribe<geometry_msgs::PoseStamped>(topic, 1000, boost::bind(poseCallbackPoseStamped, _1, boost::ref(filepath)));
+  }
+  else if (topic_type == "PCS") {
+      ROS_INFO("Topic type: geometry_msgs::PoseWithCovarianceStamped");
+      sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>(topic, 1000, boost::bind(poseCallbackPoseWithCovarianceStamped, _1, boost::ref(filepath)));
+  }
+  else if (topic_type == "O"){
+      ROS_INFO("Topic type: nav_msgs::Odometry");
+      sub = n.subscribe<nav_msgs::Odometry>(topic, 1000, boost::bind(poseCallback, _1, boost::ref(filepath)));
+  }
+  else {
+      std::cerr << "ERROR: Unsupported topic type. _type parameter must be one of these: [O, PCS, PS]" << std::endl;
+      return -1;
+  }
   ros::spin();
 
   return 0;
