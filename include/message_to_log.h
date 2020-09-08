@@ -32,7 +32,7 @@ private:
     float m_qx;
     float m_qy;
     float m_qz;
-    float timestamp;
+    double timestamp;
 
     void PoseToLog(const geometry_msgs::Pose pose);
 };
