@@ -14,7 +14,7 @@ Clone this repository to your workspace and `catkin_make` it.
 ## Usage
 Run:
 ```
-rosrun pose_listener pose_listener _topic:=<TOPIC_NAME> _type:=<TOPIC_TYPE>
+rosrun pose_listener pose_listener _topic:=<TOPIC_NAME> _type:=<TOPIC_TYPE> [_output_file:=<PATH_TO_FILE>]
 ```
 where 
 * `TOPIC_NAME` is the name of the topic, e.g. `/firefly_sbx/vio/odom`. Run `rostopic list` to print a list of topic names.
@@ -22,7 +22,7 @@ where
   * `O` if the type is `nav_msgs::Odometry`
   * `PS` if the type is `geometry_msgs::PoseStamped`
   * `PCS` if the type is `geometry_msgs::PoseWithCovarianceStamped`
-As a result, a file named `trajectory.txt` is saved in the current directory.
+* `PATH_TO_FILE` is a path to the output file. `_output_file` is an optional argument. Default value: `trajectory.txt`
 
 ## TODO
 * The type of the topic should be queried in runtime.
