@@ -32,16 +32,16 @@ int main(int argc, char **argv) {
     std::string topic;
     std::string topic_type;
     std::string filepath;
-    filepath = "trajectory.txt";
+//    filepath = "trajectory.txt";
     n.getParam("topic", topic);
     n.getParam("type", topic_type);
-    // n.getParam("output", filepath);
+    n.param<std::string>("output_file", filepath, "trajectory.txt");
     ROS_INFO("Topic: %s", topic.c_str());
     ROS_INFO("Output file: %s", filepath.c_str());
     std::ifstream infile(filepath);
     if (infile.good()) {
-        std::cerr << "ERROR: Output File Exists" << std::endl;
-        return -1;
+        std::cerr << "ERROR: Output File Exists: " << filepath << std::endl;
+        return 1;
     }
 
     ros::Subscriber sub; // This variable must be declared here, otherwise the subscriber goes out of scope and unsubscribes.

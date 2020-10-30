@@ -33,6 +33,10 @@ MessageToLog::MessageToLog(const geometry_msgs::PoseWithCovarianceStamped::Const
 inline void Logger(std::string filePath, std::string logMsg) {
 
     std::ofstream ofs(filePath.c_str(), std::ios_base::out | std::ios_base::app);
+    if(!ofs) {
+        std::cerr << "ERROR: Unable to create output file: " << filePath << std::endl;
+        exit(1);
+    }
 //    ofs << now << '\t' << logMsg << '\n';
     ofs << logMsg << std::endl;
     ofs.close();
